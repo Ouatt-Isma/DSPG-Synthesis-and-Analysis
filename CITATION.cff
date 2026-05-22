@@ -1,23 +1,23 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
-type: software
-title: "DSPG Synthesis and Analysis: Empirical Evaluation"
-abstract: >
-  Empirical evaluation code for comparing two DSPG (Dispersed Series-Parallel
-  Graph) synthesis strategies in the context of Subjective Logic trust network
-  analysis. Implements Jøsang's original criteria and an optimized criterion,
-  with benchmarking across randomly generated trust networks.
-authors:
-  - family-names: "Ouattara"
-    given-names: "Ismaël"
-    email: "ouattaraismael258852@gmail.com"
-repository-code: "https://github.com/Ouatt-Isma/DSPG-Synthesis-and-Analysis"
-license: MIT
-date-released: "2025-01-01"
-keywords:
-  - subjective logic
-  - trust networks
-  - DSPG
-  - series-parallel graphs
-  - trust propagation
-  - belief fusion
+@InProceedings{10.1007/978-3-032-08887-1_4,
+author="Ouattara, Koffi Ismael
+and Petrovska, Ana
+and Krontiris, Ioannis
+and Dimitrakos, Theo
+and Kargl, Frank",
+editor="Hogan, Aidan
+and Satoh, Ken
+and Da{\u{g}}, Hasan
+and Turhan, Anni-Yasmin
+and Roman, Dumitru
+and Soylu, Ahmet",
+title="An Optimized Framework for DSPG Synthesis and Trust Network Analysis with Subjective Logic",
+booktitle="Rules and Reasoning",
+year="2026",
+publisher="Springer Nature Switzerland",
+address="Cham",
+pages="54--71",
+abstract="Subjective Logic-based trust reasoning requires the network to be a Directed Series-Parallel Graph (DSPG). However, most real-world trust graphs do not meet this condition, and existing transformation methods often remove uncertain edges, causing unnecessary information loss. In this paper, we propose a new DSPG synthesis framework that prioritizes structural integrity and information preservation. At its core is the concept of Parallel Non-intersecting Path Subnetworks (PNPS), which refines existing definitions and enables clearer identification of DSPG violations. We also introduce optimized synthesis criteria that admit more edges while maintaining DSPG compliance. In addition to the theoretical contributions from the framework, we also propose an algorithm for DSPG synthesis that ensures correctness, avoids edge removal, and enhances trust inference. Our experiments demonstrate reduced uncertainty in derived opinions and more reliable decision-making in trust-based systems.",
+isbn="978-3-032-08887-1"
+}
