@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "DSPG Synthesis and Analysis: Empirical Evaluation"
+abstract: >
+  Empirical evaluation code for comparing two DSPG (Dispersed Series-Parallel
+  Graph) synthesis strategies in the context of Subjective Logic trust network
+  analysis. Implements Jøsang's original criteria and an optimized criterion,
+  with benchmarking across randomly generated trust networks.
+authors:
+  - family-names: "Ouattara"
+    given-names: "Ismaël"
+    email: "ouattaraismael258852@gmail.com"
+repository-code: "https://github.com/Ouatt-Isma/DSPG-Synthesis-and-Analysis"
+license: MIT
+date-released: "2025-01-01"
+keywords:
+  - subjective logic
+  - trust networks
+  - DSPG
+  - series-parallel graphs
+  - trust propagation
+  - belief fusion

@@ -113,8 +113,25 @@ def compute_nnl(G: nx.DiGraph) -> dict:
 
 def is_dspg(G: nx.DiGraph) -> bool:
     """
-    A directed acyclic graph is a DSPG iff it can be reduced to a single
-    edge by series and parallel reductions.  We verify this constructively.
+    Return True if G is a valid DSPG (Dispersed Series-Parallel Graph).
+
+    A DAG is a DSPG if and only if it can be reduced to a single source-to-sink
+    edge by repeated application of series and parallel reductions.  This
+    function verifies that constructively:
+
+    * Series reduction: if an intermediate node n has in-degree 1 and
+      out-degree 1, replace the chain pred→n→succ with a direct edge pred→succ
+      (adding it if it does not already exist) and remove n.
+    * Parallel reduction: multiple edges between the same pair of nodes are
+      collapsed implicitly — since we use a simple DiGraph, adding an edge that
+      already exists is a no-op, so parallel branches are merged into one edge
+      as soon as their shared endpoints are exposed by series reductions.
+
+    The loop repeats until no series reduction applies, then checks whether
+    only the single edge source→sink remains.
+
+    Note: this verifier is sufficient for the DSPGs produced by
+    `synthesize_dspg`, which always build outward from a single seed path.
     """
     H = G.copy()
     if not nx.is_directed_acyclic_graph(H):
@@ -125,16 +142,9 @@ def is_dspg(G: nx.DiGraph) -> bool:
         return False
     source, sink = sources[0], sinks[0]
 
-    # repeated series + parallel reductions until nothing changes
     changed = True
     while changed:
         changed = False
-        # parallel reduction: collapse multi-edges (here each edge is unique;
-        # we only get parallel after series reductions).  Simulate using
-        # a multigraph-aware structure.  Since we use a simple DiGraph,
-        # parallel edges manifest as multiple paths of length 1; combine
-        # them into a single edge by removing duplicates (already done).
-        # series reduction
         for n in list(H.nodes()):
             if n == source or n == sink:
                 continue
@@ -148,19 +158,10 @@ def is_dspg(G: nx.DiGraph) -> bool:
                     H.add_edge(pred, succ)
                 changed = True
                 break
-        if changed:
-            continue
-        # parallel reduction: if two nodes have multiple paths of length 1
-        # between them - in a simple DiGraph that can't happen, but if a
-        # series reduction tried to add an existing edge, we already merged.
-        # So instead look for "pure parallel" pairs (A,B) where every path
-        # from A to B is a direct edge - already collapsed.
-        # Try detecting parallel structure that can be merged:
-        # if a node n has predecessors p1, p2 with both also being only
-        # connected by the path through n, we still rely on series.
-    # success iff only the single edge source->sink is left
-    return H.number_of_nodes() == 2 and H.number_of_edges() == 1 \
-        and H.has_edge(source, sink)
+
+    return (H.number_of_nodes() == 2
+            and H.number_of_edges() == 1
+            and H.has_edge(source, sink))
 
 
 # ------------------------------------------------------------------
@@ -225,50 +226,47 @@ def _path_uncertainty(G: nx.DiGraph, path: list) -> float:
 
 def _branches_of_path(path: list, G_prime: nx.DiGraph) -> list[tuple]:
     """
-    Decompose a path into maximal branches.
+    Decompose a path into candidate branches not yet in G_prime.
 
-    A "branch" is a maximal contiguous sub-path P[i..j] such that:
-      * P[i] and P[j] are already in G_prime,
-      * none of the edges (P[k], P[k+1]) for i <= k < j are in G_prime.
+    A *branch* is a maximal contiguous sub-path ``path[i..j]`` such that:
 
-    If every edge along the path is already in G_prime, no branches are
-    returned.  We return the list of (i, j) index pairs.
+    * ``path[i]`` and ``path[j]`` are already nodes in G_prime (anchor points),
+    * none of the edges ``(path[k], path[k+1])`` for ``i ≤ k < j`` are in G_prime.
+
+    Returns a list of ``(i, j)`` index pairs.  If every edge of the path is
+    already in G_prime, an empty list is returned.
     """
     n = len(path)
     branches = []
     i = 0
     while i < n - 1:
-        # advance i to the first index where path[i] is in G_prime
+        # Advance i to the next node that is already in G_prime.
         while i < n - 1 and path[i] not in G_prime:
             i += 1
         if i >= n - 1:
             break
-        # if the edge (path[i], path[i+1]) is already in G_prime, skip
+        # Skip edges that are already in G_prime.
         if G_prime.has_edge(path[i], path[i + 1]):
             i += 1
             continue
-        # walk forward until we reach another node in G_prime
+        # Walk forward to find the first subsequent node in G_prime such that
+        # all edges between i and j are external (not yet in G_prime).
         j = i + 1
-        while j < n and (path[j] not in G_prime
-                         or not _segment_fully_external(
-                             path, i, j, G_prime)):
-            # we keep walking while we haven't hit an existing node, or
-            # while none of the segment's edges are already in G_prime
-            # (the second condition is automatically true here).
-            j += 1
-            # safety bail if we run past the end
-            if j == n:
+        while j < n:
+            if path[j] in G_prime and _segment_fully_external(path, i, j, G_prime):
                 break
+            j += 1
         if j < n:
             branches.append((i, j))
-            i = j  # continue from this in-G' node
+            i = j
         else:
             break
     return branches
 
 
-def _segment_fully_external(path, i, j, G_prime):
-    """Helper: are all edges in path[i..j] not in G_prime?"""
+def _segment_fully_external(path: list, i: int, j: int,
+                             G_prime: nx.DiGraph) -> bool:
+    """Return True if no edge in path[i..j] is already in G_prime."""
     for k in range(i, j):
         if G_prime.has_edge(path[k], path[k + 1]):
             return False

@@ -319,4 +319,4 @@ if __name__ == "__main__":
     print_summary_table(results)
     save_results(results, "./dspg_benchmark_results.json")
     plot_results(results, ".")
-    print("\nPlots written to /mnt/user-data/outputs/")
+    print("\nPlots written to the current directory.")

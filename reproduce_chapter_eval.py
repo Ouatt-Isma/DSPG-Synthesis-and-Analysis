@@ -2,23 +2,32 @@
 Reproduce the evaluation of Section 4.7.1 of the chapter
 (Fig 4.9 in the chapter / Fig 6 in the SL-DSPG paper).
 
-We use the trust graph of Fig 4.4a:
+We use the trust network of Fig 4.4a, which has five nodes (A–E) and
+six directed trust edges:
 
-         A --> B --> C
-         |     |     |
-         v     v     v
-         D --> E <-- E
-              |
-              v
-              E
+    Edges: A->B, A->D, B->C, B->E, C->E, D->E
 
-with edges  A->B, A->D, B->C, B->E, C->E, D->E.
+    A --> B --> C
+    |     |      \
+    v     v       v
+    D     +-----> E
+    |              ^
+    +--------------+
 
-* Original criteria discard the extra edge  B -> E.
-* Optimized criteria keep the extra edge.
+This script analytically tests the effect of the edge B->E as a shortcut
+parallel to the longer path B->C->E.  Specifically:
 
-We sweep the uncertainty of  ω^B_E  and plot the final-derived-opinion
-uncertainty for both fusion operators (cumulative and averaging).
+  * "Without B->E" (reference / original scenario): only paths A->B->C->E
+    and A->D->E are used.  This corresponds to the case where G' is
+    initialised with path A->B->C->E and the original synthesis criterion
+    rejects the shortcut B->E (NNL(B) ≠ NNL(E) in that initial G').
+
+  * "With B->E" (optimized scenario): B->E is retained as a parallel path
+    alongside B->C->E (e.g. under the optimized criterion).
+
+We sweep the uncertainty of ω^B_E and plot the derived-opinion uncertainty
+under both cumulative and averaging fusion, showing that the extra edge
+always reduces uncertainty (for cumulative fusion).
 """
 
 import numpy as np
